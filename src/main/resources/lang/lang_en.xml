@@ -1084,6 +1084,8 @@
     </string>
     <string name="err_unexpectedToken_N0_inLine_N1">Unexpected token ({0}) in line {1}.</string>
     <string name="err_variable_N0_notFound">Variable {0} not found!</string>
+    <string name="err_sub_N0_inLine_N1_notAtTopLevel">Subroutine {0} in line {1} is not defined at top level</string>
+    <string name="err_sub_N0_notFound_inLine_N1">Subroutine {0} not found in line {1}</string>
     <string name="err_noTestInputSignalsDefined">No input signals defined in test vector!</string>
     <string name="err_noTestOutputSignalsDefined">No output signals defined in test vector!</string>
     <string name="err_noTestData">No test data found.</string>
@@ -2401,6 +2403,20 @@ the 'Bit' signal for the test. The circuit itself contains no output 'Bit'.</p>
 <dd>If the condition [cond] is true, the value [then] is returned, otherwise the value [else].</dd>
 </dl>
 </p>
+
+<h3>Subroutines</h3>
+<p>If a test requires a lot of repeated it can be useful to move the common code to a subroutine. 
+A subroutine can take any number of expressions as arguments. The following example shows a simple subroutine:</p>
+<pre>A B
+def f(b)
+0 (b)
+1 (b)
+end def
+call f(0)
+call f(1)
+</pre>
+<p>A subroutine needs to be defined before it can be called. In partiular, this means that it is
+not possible to define recursive subroutines.</p>
 
 <h3>Processors</h3>
 <p>If processors are to be tested, an initialization of the processor is usually required.

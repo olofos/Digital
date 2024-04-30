@@ -37,6 +37,7 @@ public class Parser {
     private final ArrayList<VirtualSignal> virtualSignals;
     private final Tokenizer tok;
     private final HashMap<String, Function> functions = new HashMap<>();
+    private final HashMap<String, Sub> subs = new HashMap<>();
     private final Random random;
     private LineEmitter emitter;
 
@@ -177,6 +178,53 @@ public class Parser {
                     long count = parseInt();
                     expect(Tokenizer.Token.CLOSE);
                     list.add(new LineEmitterRepeat("n", count, parseSingleRow()));
+                    break;
+                case DEF:
+                    tok.consume();
+                    expect(Tokenizer.Token.IDENT);
+                    String defName = tok.getIdent();
+                    if (endToken != null) {
+                        throw new ParserException(
+                                Lang.get("err_sub_N0_inLine_N1_notAtTopLevel", defName, tok.getLine()));
+                    }
+                    expect(Tokenizer.Token.OPEN);
+                    ArrayList<String> defArgs = new ArrayList<>();
+                    if (tok.peek() != Tokenizer.Token.CLOSE) {
+                        expect(Tokenizer.Token.IDENT);
+                        defArgs.add(tok.getIdent());
+                        while (tok.peek() == Tokenizer.Token.COMMA) {
+                            tok.consume();
+                            expect(Tokenizer.Token.IDENT);
+                            defArgs.add(tok.getIdent());
+                        }
+                    }
+                    expect(Tokenizer.Token.CLOSE);
+                    subs.put(defName, new Sub(defArgs, parseRows(Tokenizer.Token.DEF)));
+                    break;
+                case CALL:
+                    tok.consume();
+                    expect(Tokenizer.Token.IDENT);
+                    String callName = tok.getIdent();
+                    expect(Tokenizer.Token.OPEN);
+                    ArrayList<Expression> callArgs = new ArrayList<>();
+                    if (tok.peek() != Tokenizer.Token.CLOSE) {
+                        callArgs.add(parseExpression());
+                        while (tok.peek() == Tokenizer.Token.COMMA) {
+                            tok.consume();
+                            callArgs.add(parseExpression());
+                        }
+                    }
+                    expect(Tokenizer.Token.CLOSE);
+                    Sub sub = subs.get(callName);
+                    if (sub != null) {
+                        if (callArgs.size() != sub.getArgCount()) {
+                            throw new ParserException(Lang.get("err_wrongNumOfArgsIn_N0_InLine_N1_found_N2_expected_N3",
+                                    callName, tok.getLine(), callArgs.size(), sub.getArgCount()));
+                        }
+                        list.add(sub.getCall(callArgs));
+                    } else {
+                        throw new ParserException(Lang.get("err_sub_N0_notFound_inLine_N1", callName, tok.getLine()));
+                    }
                     break;
                 case LOOP:
                     tok.consume();
